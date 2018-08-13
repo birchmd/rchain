@@ -1,6 +1,7 @@
 package coop.rchain.casper.helper
 
 import cats.{Applicative, ApplicativeError, Id}
+import cats.effect.concurrent.Ref
 import cats.implicits._
 import coop.rchain.casper.protocol._
 import coop.rchain.casper.util.comm.CommUtil.casperPacketHandler
@@ -97,23 +98,26 @@ object HashSetCasperTestNode {
       implicit scheduler: Scheduler): HashSetCasperTestNode = {
     val name     = "standalone"
     val identity = peerNode(name, 40400)
+    val msgQueuesF = Ref.unsafe[Id, Map[PeerNode, mutable.Queue[Protocol]]](
+      Map.empty[PeerNode, mutable.Queue[Protocol]])
     val tle =
-      new TransportLayerTestImpl[Id](identity, Map.empty[PeerNode, mutable.Queue[Protocol]])
+      new TransportLayerTestImpl[Id](identity, msgQueuesF)
 
     new HashSetCasperTestNode(name, identity, tle, genesis, sk)
   }
 
   def network(sks: IndexedSeq[Array[Byte]], genesis: BlockMessage)(
       implicit scheduler: Scheduler): IndexedSeq[HashSetCasperTestNode] = {
-    val n         = sks.length
-    val names     = (1 to n).map(i => s"node-$i")
-    val peers     = names.map(peerNode(_, 40400))
-    val msgQueues = peers.map(_ -> new mutable.Queue[Protocol]()).toMap
+    val n     = sks.length
+    val names = (1 to n).map(i => s"node-$i")
+    val peers = names.map(peerNode(_, 40400))
+    val msgQueuesF = Ref.unsafe[Id, Map[PeerNode, mutable.Queue[Protocol]]](
+      peers.map(_ -> new mutable.Queue[Protocol]()).toMap)
 
     val nodes =
       names.zip(peers).zip(sks).map {
         case ((n, p), sk) =>
-          val tle = new TransportLayerTestImpl[Id](p, msgQueues)
+          val tle = new TransportLayerTestImpl[Id](p, msgQueuesF)
           new HashSetCasperTestNode(n, p, tle, genesis, sk)
       }
 

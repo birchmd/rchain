@@ -178,7 +178,7 @@ class RSpace[C, P, A, R, K](store: IStore[C, P, A, K], branch: Branch)(
 
   def createCheckpoint(): Checkpoint = {
     val root   = store.createCheckpoint()
-    val events = eventLog.take()
+    val events = eventLog.take(5000)
     eventLog.put(Seq.empty)
     Checkpoint(root, events)
   }

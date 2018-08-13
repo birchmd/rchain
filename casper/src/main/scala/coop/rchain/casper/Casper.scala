@@ -334,19 +334,23 @@ sealed abstract class MultiParentCasperInstances {
         for {
           now         <- Time[F].currentMillis
           internalMap <- BlockStore[F].asMap()
-          Right((computedCheckpoint, _, deployWithCost)) = knownStateHashesContainer
-            .mapAndUpdate[(Checkpoint, Set[StateHash], Vector[DeployCost])](
-              InterpreterUtil.computeDeploysCheckpoint(p,
-                                                       r,
-                                                       genesis,
-                                                       _blockDag.get,
-                                                       internalMap,
-                                                       emptyStateHash,
-                                                       _,
-                                                       runtimeManager.computeState),
-              _._2)
-          computedStateHash = ByteString.copyFrom(computedCheckpoint.root.bytes.toArray)
-          serializedLog     = computedCheckpoint.log.map(EventConverter.toCasperEvent)
+          stuff <- Capture[F].capture {
+                    knownStateHashesContainer
+                      .mapAndUpdate[(Checkpoint, Set[StateHash], Vector[DeployCost])](
+                        InterpreterUtil.computeDeploysCheckpoint(p,
+                                                                 r,
+                                                                 genesis,
+                                                                 _blockDag.get,
+                                                                 internalMap,
+                                                                 emptyStateHash,
+                                                                 _,
+                                                                 runtimeManager.computeState),
+                        _._2)
+                  }
+          Right((computedCheckpoint, _, deployWithCost)) = stuff
+          computedStateHash                              = ByteString.copyFrom(computedCheckpoint.root.bytes.toArray)
+          serializedLog                                  = computedCheckpoint.log.map(EventConverter.toCasperEvent)
+          //_ <- Capture[F].capture{ println("**Good log**"); computedCheckpoint.log.foreach(println); println("****************") }
           postState = RChainState()
             .withTuplespace(computedStateHash)
             .withBonds(bonds(p.head))

@@ -124,7 +124,7 @@ object CommUtil {
   }
 
   def casperPacketHandler[
-      F[_]: Monad: MultiParentCasperConstructor: NodeDiscovery: TransportLayer: Log: Time: ErrorHandler: BlockStore: RPConfAsk](
+      F[_]: Monad: MultiParentCasperConstructor: Capture: NodeDiscovery: TransportLayer: Log: Time: ErrorHandler: BlockStore: RPConfAsk](
       peer: PeerNode): PartialFunction[Packet, F[Option[Packet]]] =
     Function
       .unlift(
@@ -162,12 +162,14 @@ object CommUtil {
       }
 
   def blockPacketHandler[
-      F[_]: Monad: MultiParentCasper: NodeDiscovery: TransportLayer: Log: Time: ErrorHandler: BlockStore: RPConfAsk](
+      F[_]: Monad: MultiParentCasper: Capture: NodeDiscovery: TransportLayer: Log: Time: ErrorHandler: BlockStore: RPConfAsk](
       peer: PeerNode,
       msg: scalapb.GeneratedMessage): F[Option[Packet]] =
     msg match {
       case b: BlockMessage =>
+        import coop.rchain.catscontrib.IOUtil
         for {
+          _          <- IOUtil.sleep(30000)
           isOldBlock <- MultiParentCasper[F].contains(b)
           _ <- if (isOldBlock) {
                 Log[F].info(

@@ -14,7 +14,7 @@ class AtomicSyncVar[A](init: A) {
 
   //Use case: capture an intermediate result in the process of updating the var.
   def mapAndUpdate[B](f: A => B, g: B => A): Either[Throwable, B] = {
-    val curr = underlying.take()
+    val curr = underlying.take(5000)
 
     Try(f(curr))
       .flatMap(value => Try(value -> g(value)))

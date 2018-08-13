@@ -83,13 +83,13 @@ trait IStore[C, P, A, K] {
 
   def trieDelete(key: Blake2b256Hash, gnat: GNAT[C, P, A, K]) = {
     val count   = _trieUpdateCount.getAndIncrement()
-    val currLog = _trieUpdates.take()
+    val currLog = _trieUpdates.take(5000)
     _trieUpdates.put(currLog :+ TrieUpdate(count, Delete, key, gnat))
   }
 
   def trieInsert(key: Blake2b256Hash, gnat: GNAT[C, P, A, K]) = {
     val count   = _trieUpdateCount.getAndIncrement()
-    val currLog = _trieUpdates.take()
+    val currLog = _trieUpdates.take(5000)
     _trieUpdates.put(currLog :+ TrieUpdate(count, Insert, key, gnat))
   }
 

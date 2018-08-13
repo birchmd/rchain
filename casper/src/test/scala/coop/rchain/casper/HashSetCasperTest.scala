@@ -6,11 +6,14 @@ import cats.implicits._
 import com.google.protobuf.ByteString
 import coop.rchain.catscontrib.TaskContrib.TaskOps
 import coop.rchain.casper.genesis.Genesis
-import coop.rchain.casper.helper.{BlockStoreTestFixture, CasperEffect, HashSetCasperTestNode}
+import coop.rchain.casper.helper.{BlockStoreTestFixture, EffectNode, HashSetCasperTestNode}
 import coop.rchain.casper.protocol._
 import coop.rchain.casper.util.ProtoUtil
+import coop.rchain.casper.util.comm.TransportLayerTestImpl
 import coop.rchain.casper.util.rholang.InterpreterUtil
 import coop.rchain.casper.util.rholang.RuntimeManager
+import coop.rchain.comm.protocol.routing.Protocol
+import coop.rchain.comm.PeerNode
 import coop.rchain.comm.transport
 import coop.rchain.comm.transport.CommMessages.packet
 import coop.rchain.crypto.hash.Blake2b256
@@ -25,6 +28,7 @@ import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.Scheduler.Implicits.global
 import org.scalatest.{FlatSpec, Matchers}
+import scala.collection.mutable
 import coop.rchain.shared.PathOps.RichPath
 
 import scala.collection.immutable
@@ -52,14 +56,17 @@ class HashSetCasperTest extends FlatSpec with Matchers {
   }
 
   it should "not allow multiple threads to process the same block" in {
-    val scheduler            = Scheduler.fixedPool("three-threads", 3)
-    val (casperEff, cleanUp) = CasperEffect(validatorKeys.head, genesis)(scheduler)
+    import EffectNode.Effect
+    import coop.rchain.catscontrib._
+    implicit val scheduler               = Scheduler.fixedPool("three-threads", 3)
+    implicit val antiMonadEffectInstance = EffectNode.antiMonadEffectInstance
+    val node                             = EffectNode.standalone[Effect](validatorKeys.head, genesis)
 
     val deploy = ProtoUtil.basicDeploy(0)
+    val casper = node.casperEff
     val testProgram = for {
-      casper <- casperEff
-      _      <- casper.deploy(deploy)
-      block  <- casper.createBlock.map(_.get)
+      _     <- casper.deploy(deploy)
+      block <- casper.createBlock.map(_.get)
       result <- EitherT(
                  Task.racePair(casper.addBlock(block).value, casper.addBlock(block).value).flatMap {
                    case Left((statusA, running)) =>
@@ -73,7 +80,7 @@ class HashSetCasperTest extends FlatSpec with Matchers {
       new TaskOps(testProgram.value)(scheduler).unsafeRunSync.right.get
 
     threadStatuses should matchPattern { case (Processing, Valid) | (Valid, Processing) => }
-    cleanUp()
+    node.tearDown()
   }
 
   it should "create blocks based on deploys" in {
@@ -537,6 +544,10 @@ class HashSetCasperTest extends FlatSpec with Matchers {
 }
 
 object HashSetCasperTest {
+  implicit class TLEqueues(tle: TransportLayerTestImpl[Id]) {
+    def msgQueues: Map[PeerNode, mutable.Queue[Protocol]] = tle.msgQueuesF.get
+  }
+
   def validateBlockStore[R](node: HashSetCasperTestNode)(f: BlockStore[Id] => R) = {
     val bs = BlockStoreTestFixture.create(node.dir)
     f(bs)

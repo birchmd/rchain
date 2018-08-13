@@ -49,6 +49,7 @@ class RuntimeManager private (val emptyStateHash: ByteString, runtimeContainer: 
       }
     )
 
+    println(s"$runtimeContainer returned by ${Thread.currentThread().getName()}")
     runtimeContainer.put(runtime)
 
     for {
@@ -62,11 +63,13 @@ class RuntimeManager private (val emptyStateHash: ByteString, runtimeContainer: 
     : (StateHash, Seq[Deploy]) => Either[DeployError, (Checkpoint, Vector[DeployCost])] = {
     (hash: StateHash, terms: Seq[Deploy]) =>
       {
-        val runtime   = runtimeContainer.take()
+        val runtime = runtimeContainer.take(5000)
+        println(s"$runtimeContainer taken by ${Thread.currentThread().getName()}")
         val blakeHash = Blake2b256Hash.fromByteArray(hash.toByteArray)
         val riggedRuntime = Try(runtime.replaySpace.rig(blakeHash, log)) match {
           case Success(_) => runtime
           case Failure(ex) =>
+            println(s"$runtimeContainer returned by ${Thread.currentThread().getName()}")
             runtimeContainer.put(runtime)
             throw ex
         }
@@ -77,6 +80,7 @@ class RuntimeManager private (val emptyStateHash: ByteString, runtimeContainer: 
           Left(_),
           replayDeployCost =>
             Right((riggedRuntime.replaySpace.createCheckpoint(), replayDeployCost)))
+        println(s"$runtimeContainer returned by ${Thread.currentThread().getName()}")
         runtimeContainer.put(riggedRuntime)
         newCheckpoint
       }
@@ -90,6 +94,7 @@ class RuntimeManager private (val emptyStateHash: ByteString, runtimeContainer: 
     val newCheckpoint = error.fold[Either[DeployError, (Checkpoint, Vector[DeployCost])]](
       Left(_),
       deployCosts => Right((resetRuntime.space.createCheckpoint(), deployCosts)))
+    println(s"$runtimeContainer returned by ${Thread.currentThread().getName()}")
     runtimeContainer.put(resetRuntime)
     newCheckpoint
   }
@@ -97,6 +102,7 @@ class RuntimeManager private (val emptyStateHash: ByteString, runtimeContainer: 
   def storageRepr(hash: StateHash): String = {
     val resetRuntime = getResetRuntime(hash)
     val result       = StoragePrinter.prettyPrint(resetRuntime.space.store)
+    println(s"$runtimeContainer returned by ${Thread.currentThread().getName()}")
     runtimeContainer.put(resetRuntime)
     result
   }
@@ -106,6 +112,7 @@ class RuntimeManager private (val emptyStateHash: ByteString, runtimeContainer: 
     // TODO: Switch to a read only name
     val bondsChannel     = Channel(Quote(Par().copy(exprs = Seq(Expr(GString("proofOfStake"))))))
     val bondsChannelData = resetRuntime.space.getData(bondsChannel)
+    println(s"$runtimeContainer returned by ${Thread.currentThread().getName()}")
     runtimeContainer.put(resetRuntime)
     toBondSeq(bondsChannelData)
   }
@@ -128,11 +135,13 @@ class RuntimeManager private (val emptyStateHash: ByteString, runtimeContainer: 
   }
 
   private def getResetRuntime(hash: StateHash) = {
-    val runtime   = runtimeContainer.take()
+    val runtime = runtimeContainer.take(5000)
+    println(s"$runtimeContainer taken by ${Thread.currentThread().getName()}")
     val blakeHash = Blake2b256Hash.fromByteArray(hash.toByteArray)
     Try(runtime.space.reset(blakeHash)) match {
       case Success(_) => runtime
       case Failure(ex) =>
+        println(s"$runtimeContainer returned by ${Thread.currentThread().getName()}")
         runtimeContainer.put(runtime)
         throw ex
     }
@@ -179,6 +188,7 @@ object RuntimeManager {
     val replayHash = ByteString.copyFrom(active.replaySpace.createCheckpoint().root.bytes.toArray)
     assert(hash == replayHash)
     val runtime = new SyncVar[Runtime]()
+    println(s"$active put in $runtime by ${Thread.currentThread().getName()}")
     runtime.put(active)
 
     new RuntimeManager(hash, runtime)

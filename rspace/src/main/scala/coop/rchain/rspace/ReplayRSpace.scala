@@ -130,15 +130,16 @@ class ReplayRSpace[C, P, A, R, K](store: IStore[C, P, A, K], branch: Branch)(
                          |at <channels: $channels>""".stripMargin.replace('\n', ' '))
 
         val consumeRef = Consume.create(channels, patterns, continuation, persist)
-        val replays    = replayData.take()
+        val replays    = replayData.take(5000)
 
         replays.get(consumeRef) match {
           case None =>
             runMatcher(None) match {
               case None =>
                 storeWaitingContinuation(replays, consumeRef, None)
-              case Some(_) =>
-                val msg = "untraced event resulted in a comm event"
+              case Some(thing) =>
+                val msg =
+                  s"untraced event resulted in a comm event resulted from $consumeRef matching with $thing"
                 logger.error(msg)
                 replayData.put(replays)
                 throw new ReplayException(msg)
@@ -246,7 +247,7 @@ class ReplayRSpace[C, P, A, R, K](store: IStore[C, P, A, K], branch: Branch)(
                          |at <groupedChannels: $groupedChannels>""".stripMargin.replace('\n', ' '))
 
         val produceRef = Produce.create(channel, data, persist)
-        val replays    = replayData.take()
+        val replays    = replayData.take(5000)
 
         @tailrec
         def getCommOrProduceCandidate(
@@ -273,9 +274,10 @@ class ReplayRSpace[C, P, A, R, K](store: IStore[C, P, A, K], branch: Branch)(
             runMatcher(None, produceRef, groupedChannels) match {
               case None =>
                 storeDatum(replays, produceRef, None)
-              case Some(ProduceCandidate(channels, _, _, _)) =>
+              case Some(thing @ ProduceCandidate(channels, _, _, _)) =>
                 logger.debug(s"produce: matching continuation found at <channels: $channels>")
-                val msg = "untraced event resulted in a comm event"
+                val msg =
+                  s"untraced event resulted in a comm event resulted from $produceRef matched with $thing"
                 logger.error(msg)
                 replayData.put(replays)
                 throw new ReplayException(msg)

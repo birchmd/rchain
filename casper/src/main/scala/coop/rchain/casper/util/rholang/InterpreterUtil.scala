@@ -18,6 +18,7 @@ import coop.rchain.shared.AttemptOps._
 import scodec.bits.BitVector
 
 import scala.collection.immutable
+import scala.util.{Failure, Success, Try}
 
 import RuntimeManager.DeployError
 
@@ -39,7 +40,7 @@ object InterpreterUtil {
     val tsHash        = ProtoUtil.tuplespace(b)
     val serializedLog = b.body.fold(Seq.empty[Event])(_.commReductions)
     val log           = serializedLog.map(EventConverter.toRspaceEvent).toList
-    val (computedCheckpoint, updatedStateHashes, cost) =
+    val attempt = Try(
       computeBlockCheckpointFromDeploys(b,
                                         genesis,
                                         dag,
@@ -47,6 +48,15 @@ object InterpreterUtil {
                                         emptyStateHash,
                                         knownStateHashes,
                                         runtimeManager.replayComputeState(log))
+    )
+    val (computedCheckpoint, updatedStateHashes, cost) = attempt match {
+      case Success(x) => x
+      case Failure(ex) =>
+        println("Bad log:")
+        log.foreach(println)
+        println("---------------")
+        throw new Exception("Uhohs!")
+    }
     val computedStateHash = ByteString.copyFrom(computedCheckpoint.root.bytes.toArray)
     if (tsHash.contains(computedStateHash)) {
       // state hash in block matches computed hash!

@@ -20,6 +20,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class BlockApproverProtocolTest extends FlatSpec with Matchers {
   import BlockApproverProtocolTest._
+  import HashSetCasperTest.TLEqueues
 
   "BlockApproverProtocol" should "respond to valid ApprovedBlockCandidates" in {
     val n                = 8
