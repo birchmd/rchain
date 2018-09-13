@@ -314,8 +314,8 @@ class HashSetCasperTest extends FlatSpec with Matchers {
         blocks    <- allHashes.toList.traverse(node.blockStore.get).map(_.flatten)
       } yield blocks.toSet
 
-    val intsVar = new SyncVar[Iterator[Int]]
-    intsVar.put(Iterator.from(0))
+    val intsVar = new SyncVar[Iterator[Long]]
+    intsVar.put(Iterator.iterate(System.currentTimeMillis())(_ + 1L))
     val rhoExamples = (new java.io.File("./rholang/examples")).listFiles
       .filter(f => f.isFile && f.getName.endsWith("rho"))
       .map(f =>

@@ -230,9 +230,11 @@ object Validate {
       result <- duplicatedBlock match {
                  case Some(b) =>
                    for {
-                     _ <- Log[F].warn(ignore(
-                           block,
-                           s"found deploy by the same (user, millisecond timestamp) produced in the block(${b.blockHash})"))
+                     _ <- Log[F].warn(
+                           ignore(
+                             block,
+                             "found deploy by the same (user, millisecond timestamp) " +
+                               s"produced in the block(${PrettyPrinter.buildString(b.blockHash)})"))
                    } yield Left(InvalidRepeatDeploy)
                  case None => Applicative[F].pure(Right(Valid))
                }
