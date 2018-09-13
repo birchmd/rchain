@@ -4,7 +4,7 @@ import java.nio.file.Files
 
 import cats.{Id, Monad}
 import cats.data.EitherT
-import cats.effect.Sync
+import cats.effect.{Sync, Timer}
 import cats.implicits._
 import com.google.protobuf.ByteString
 import coop.rchain.blockstorage.BlockStore
@@ -17,8 +17,9 @@ import coop.rchain.casper.util.ProtoUtil
 import coop.rchain.casper.util.ProtoUtil.{chooseNonConflicting, signBlock, toJustification}
 import coop.rchain.casper.util.rholang.RuntimeManager
 import coop.rchain.casper.util.rholang.RuntimeManager.StateHash
-import coop.rchain.catscontrib.Capture
+import coop.rchain.catscontrib._
 import coop.rchain.catscontrib.TaskContrib.TaskOps
+import coop.rchain.comm.CommError
 import coop.rchain.comm.CommError.ErrorHandler
 import coop.rchain.comm.rp.Connect.{ConnectionsCell, RPConfAsk}
 import coop.rchain.comm.transport
@@ -281,6 +282,95 @@ class HashSetCasperTest extends FlatSpec with Matchers {
     nodes(1).casperEff.contains(multiparentBlock) shouldBe true
 
     nodes.foreach(_.tearDown())
+  }
+
+  it should "run all rholang examples in a network of nodes" in {
+    import HashSetCasperTestNode.Effect
+    val syncEff                 = HashSetCasperTestNode.syncEffectInstance
+    val timerEff: Timer[Effect] = eitherTTimer[Task, CommError]
+
+    def deployPropose(
+        ds: List[Effect[DeployData]],
+        node: HashSetCasperTestNode[Effect]
+    ): Effect[BlockStatus] =
+      for {
+        deploys <- ds.sequence
+        _       <- deploys.traverse(node.casperEff.deploy)
+        status <- node.casperEff.createBlock.flatMap {
+                   case Created(block)          => node.casperEff.addBlock(block)
+                   case InternalDeployError(ex) => BlockStatus.exception(ex).pure[Effect]
+                   case other =>
+                     BlockStatus.exception(new Exception(s"No block created: $other")).pure[Effect]
+                 }
+        _ <- timerEff.sleep(10.milliseconds)
+      } yield status
+
+    def getBlocks(node: HashSetCasperTestNode[Effect]): Effect[Set[BlockMessage]] =
+      for {
+        dag <- node.casperEff.blockDag
+        //every block either has children or is a child (assuming > 1 block total)
+        allHashes = dag.childMap.keySet union (dag.childMap.values.reduce(_ union _))
+        blocks    <- allHashes.toList.traverse(node.blockStore.get).map(_.flatten)
+      } yield blocks.toSet
+
+    val rhoExamples = (new java.io.File("./rholang/examples")).listFiles
+      .filter(f => f.isFile && f.getName.endsWith("rho"))
+      .map(f =>
+        for {
+          code <- syncEff.delay(scala.io.Source.fromFile(f).mkString)
+          now  <- timerEff.clockRealTime(MILLISECONDS)
+        } yield ProtoUtil.sourceDeploy(code, now))
+      .toList
+
+    val nodes = HashSetCasperTestNode
+      .networkEff(validatorKeys, genesis, storageSize = 1024L * 1024 * 1024)
+      .value
+      .unsafeRunSync
+      .right
+      .get
+      .toVector
+
+    def messagesRemaining: Effect[Boolean] =
+      for {
+        qs <- nodes.head.transportLayerEff.msgQueues.values.toList.traverse(_.get)
+      } yield qs.exists(_.nonEmpty)
+
+    def receiveAll: Effect[Unit] =
+      for {
+        _ <- nodes.traverse(_.receive)
+        _ <- timerEff.sleep(50.milliseconds)
+      } yield ()
+
+    def dualDeploy: Task[Set[BlockStatus]] =
+      for {
+        d1 <- deployPropose(rhoExamples, nodes(0)).value.fork
+        _  <- Timer[Task].sleep(2.milliseconds)
+        d2 <- deployPropose(rhoExamples, nodes(1)).value.fork
+        s1 <- d1.join.map(_.right.get)
+        s2 <- d2.join.map(_.right.get)
+      } yield Set(s1, s2)
+
+    def testProgram: Task[Set[BlockStatus]] =
+      for {
+        r  <- MonadOps.forever(receiveAll).value.fork
+        ss <- (1 to 7).toList.traverse(_ => dualDeploy)
+        s  = ss.reduce(_ union _)
+        _  <- r.cancel
+      } yield s
+
+    val statuses = testProgram.unsafeRunSync
+    statuses shouldBe Set(Valid)
+
+    //ensure all nodes have received all messages in their queue
+    val _      = Monad[Effect].whileM_(messagesRemaining)(receiveAll).value.unsafeRunSync
+    val blocks = nodes.traverse(getBlocks).value.unsafeRunSync.right.get.reduce(_ union _).toList
+
+    nodes
+      .forallM(n => blocks.forallM(b => n.casperEff.contains(b)))
+      .value
+      .unsafeRunSync
+      .right
+      .get shouldBe true
   }
 
   it should "reject addBlock when there exist deploy by the same (user, millisecond timestamp) in the chain" in {
