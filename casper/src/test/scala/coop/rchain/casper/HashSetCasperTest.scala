@@ -36,6 +36,7 @@ import monix.execution.Scheduler
 import monix.execution.Scheduler.Implicits.global
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.concurrent.SyncVar
 import scala.concurrent.duration._
 import scala.collection.immutable
 
@@ -313,12 +314,20 @@ class HashSetCasperTest extends FlatSpec with Matchers {
         blocks    <- allHashes.toList.traverse(node.blockStore.get).map(_.flatten)
       } yield blocks.toSet
 
+    val intsVar = new SyncVar[Iterator[Int]]
+    intsVar.put(Iterator.from(0))
     val rhoExamples = (new java.io.File("./rholang/examples")).listFiles
       .filter(f => f.isFile && f.getName.endsWith("rho"))
       .map(f =>
         for {
           code <- syncEff.delay(scala.io.Source.fromFile(f).mkString)
-          now  <- timerEff.clockRealTime(MILLISECONDS)
+          //use stream of incremental integers to prevent deploys with same timestamp
+          now <- syncEff.delay {
+                  val ints = intsVar.take()
+                  val i    = ints.next()
+                  intsVar.put(ints)
+                  i
+                }
         } yield ProtoUtil.sourceDeploy(code, now))
       .toList
 
@@ -371,6 +380,8 @@ class HashSetCasperTest extends FlatSpec with Matchers {
       .unsafeRunSync
       .right
       .get shouldBe true
+
+    nodes.foreach(_.tearDown())
   }
 
   it should "reject addBlock when there exist deploy by the same (user, millisecond timestamp) in the chain" in {
