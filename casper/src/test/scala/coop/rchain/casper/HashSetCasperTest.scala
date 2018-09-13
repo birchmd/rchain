@@ -359,19 +359,21 @@ class HashSetCasperTest extends FlatSpec with Matchers {
         s2 <- d2.join.map(_.right.get)
       } yield Set(s1, s2)
 
-    def testProgram: Task[Set[BlockStatus]] =
+    def testProgram: Task[Set[BlockStatus]] = {
+      val doReceive = new SyncVar[Boolean]
       for {
-        r  <- MonadOps.forever(receiveAll).value.fork
+        _  <- syncEff.delay(doReceive.put(true)).value
+        r  <- Monad[Effect].whileM_(messagesRemaining.map(_ || doReceive.get))(receiveAll).value.fork
         ss <- (1 to 7).toList.traverse(_ => dualDeploy)
         s  = ss.reduce(_ union _)
-        _  <- r.cancel
+        _  <- syncEff.delay { doReceive.take(); doReceive.put(false) }.value
+        _  <- r.join
       } yield s
+    }
 
     val statuses = testProgram.unsafeRunSync
     statuses shouldBe Set(Valid)
 
-    //ensure all nodes have received all messages in their queue
-    val _      = Monad[Effect].whileM_(messagesRemaining)(receiveAll).value.unsafeRunSync
     val blocks = nodes.traverse(getBlocks).value.unsafeRunSync.right.get.reduce(_ union _).toList
 
     nodes
