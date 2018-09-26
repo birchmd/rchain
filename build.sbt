@@ -294,6 +294,14 @@ lazy val rholangProtoBuild = (project in file("rholang-proto-build"))
   )
   .dependsOn(rholang)
 
+lazy val bondingHelper = (project in file("bonding-helper"))
+  .settings(commonSettings: _*)
+  .settings(
+    name := "bonding-helper"
+  )
+  .dependsOn(rholang, casper)
+
+
 lazy val roscalaMacros = (project in file("roscala/macros"))
   .settings(commonSettings: _*)
   .settings(
