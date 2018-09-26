@@ -297,7 +297,14 @@ lazy val rholangProtoBuild = (project in file("rholang-proto-build"))
 lazy val bondingHelper = (project in file("bonding-helper"))
   .settings(commonSettings: _*)
   .settings(
-    name := "bonding-helper"
+    name := "bonding-helper",
+    mainClass in assembly := Some("coop.rchain.bonding.Main"),
+    assemblyMergeStrategy in assembly := {
+      case x if x.endsWith("io.netty.versions.properties") => MergeStrategy.first
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    }
   )
   .dependsOn(rholang, casper)
 
