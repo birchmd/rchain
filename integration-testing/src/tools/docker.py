@@ -2,6 +2,7 @@ import logging
 from contextlib import contextmanager
 import tools.random
 
+
 def run_cmd(docker_container, cmd):
     logging.info(f"{docker_container.name}: Execute <{cmd}>")
     r = docker_container.exec_run(['sh', '-c', cmd])
@@ -12,7 +13,7 @@ def run_cmd(docker_container, cmd):
 
 
 def list_containers(docker_client, network):
-    return docker_client.containers.list(all=True, filters={"name":f".{network}"})
+    return docker_client.containers.list(all=True, filters={"name": f".{network}"})
 
 
 @contextmanager
@@ -27,5 +28,5 @@ def docker_network(docker_client):
     finally:
         for network in docker_client.networks.list():
             if network_name == network.name:
-                logging.info(f"removing {network.name}")
+                logging.info(f"Removing docker network {network.name}")
                 network.remove()
