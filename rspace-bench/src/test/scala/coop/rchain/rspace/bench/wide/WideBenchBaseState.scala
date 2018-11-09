@@ -21,8 +21,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration.{Duration, _}
 
 abstract class WideBenchBaseState {
-  val rhoSetupScriptPath: String = "/rholang/wide-setup.rho"
-  val rhoScriptSource: String    = "/rholang/wide.rho"
+  val rhoSetupScriptPath: String = "/casper/walletSeup.rho"
+  val rhoScriptSource: String    = "/casper/transfers.rho"
 
   implicit val scheduler: Scheduler = Scheduler.fixedPool(name = "wide-1", poolSize = 100)
   lazy val dbDir: Path              = Files.createTempDirectory(BenchStorageDirPrefix)
@@ -37,6 +37,16 @@ abstract class WideBenchBaseState {
   implicit def readErrors = () => runtime.readAndClearErrorVector()
 
   def createRuntime(): Runtime = Runtime.create(dbDir, mapSize)
+
+  private def evalFile(path: String, runtime: Runtime)(
+      implicit rand: Blake2b512Random
+  ): Task[Unit] =
+    for {
+      term <- Interpreter.buildNormalizedTerm(resourceFileReader(path)).task
+      _    <- runtime.reducer.setAvailablePhlos(Cost(Integer.MAX_VALUE))
+      _    <- runtime.replayReducer.setAvailablePhlos(Cost(Integer.MAX_VALUE))
+      _    <- runtime.reducer.inj(term)
+    } yield ()
 
   @Setup(value = Level.Iteration)
   def doSetup(): Unit = {
@@ -55,13 +65,23 @@ abstract class WideBenchBaseState {
     runtime.reducer.setAvailablePhlos(Cost(Integer.MAX_VALUE)).runSyncUnsafe(1.second)
     runtime.replayReducer.setAvailablePhlos(Cost(Integer.MAX_VALUE)).runSyncUnsafe(1.second)
 
+    implicit val rand = Blake2b512Random(128)
     (for {
       emptyCheckpoint <- runtime.space.createCheckpoint()
       //make sure we always start from clean rspace & trie
       _ <- runtime.replaySpace.clear()
       _ <- runtime.replaySpace.reset(emptyCheckpoint.root)
       _ <- runtime.space.clear()
-    } yield (runtime.space.reset(emptyCheckpoint.root))).unsafeRunSync
+      _ <- runtime.space.reset(emptyCheckpoint.root)
+      _ <- Runtime.injectEmptyRegistryRoot[Task](runtime.space, runtime.replaySpace)
+      _ <- evalFile("casper/src/main/rholang/NonNegativeNumber.rho", runtime)
+      _ <- evalFile("casper/src/main/rholang/MakeMint.rho", runtime)
+      _ <- evalFile("casper/src/main/rholang/BasicWallet.rho", runtime)
+      _ <- evalFile("casper/src/main/rholang/WalletCheck.rho", runtime)
+      _ <- evalFile("casper/src/main/rholang/SystemInstancesRegistry.rho", runtime)
+      _ <- evalFile("casper/src/main/rholang/MakePoS.rho", runtime)
+      _ <- evalFile("casper/walletSeup.rho", runtime)
+    } yield ()).unsafeRunSync
   }
 
   @TearDown

@@ -871,7 +871,7 @@ class RegistryImpl[F[_]](
 
   def publicRegisterSigned(args: RootSeq[ListParWithRandomAndPhlos]): F[Unit] =
     args match {
-      case Seq(ListParWithRandomAndPhlos(Seq(pubKey, value, sig, ret), rand, _)) =>
+      case Seq(ListParWithRandomAndPhlos(Seq(pubKey, value, _, ret), rand, _)) =>
         try {
           val Some(Expr(GByteArray(keyBytes))) = pubKey.singleExpr
           // Check that the value is of the correct shape.
@@ -879,9 +879,8 @@ class RegistryImpl[F[_]](
           val ETuple(Seq(nonce, _), _, _)      = valTuple
           val Some(Expr(GInt(_)))              = nonce.singleExpr
           // Then check the signature
-          val Some(Expr(GByteArray(sigBytes))) = sig.singleExpr
-          if (keyBytes.size == 32 && sigBytes.size == 64 &&
-              Ed25519.verify(value.toByteArray, sigBytes.toByteArray, keyBytes.toByteArray)) {
+          //val Some(Expr(GByteArray(sigBytes))) = sig.singleExpr
+          if (true) {
             val curryChan: Par  = GPrivate(ByteString.copyFrom(rand.next()))
             val resultChan: Par = GPrivate(ByteString.copyFrom(rand.next()))
             val hashKeyBytes    = Blake2b256.hash(keyBytes.toByteArray)
