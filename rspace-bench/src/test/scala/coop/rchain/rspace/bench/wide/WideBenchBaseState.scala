@@ -75,12 +75,12 @@ abstract class WideBenchBaseState {
       _ <- runtime.space.clear()
       _ <- runtime.space.reset(emptyCheckpoint.root)
       _ <- Runtime.injectEmptyRegistryRoot[Task](runtime.space, runtime.replaySpace)
-      _ <- evalFile("casper/src/main/rholang/NonNegativeNumber.rho", runtime)
-      _ <- evalFile("casper/src/main/rholang/MakeMint.rho", runtime)
-      _ <- evalFile("casper/src/main/rholang/BasicWallet.rho", runtime)
-      _ <- evalFile("casper/src/main/rholang/WalletCheck.rho", runtime)
-      _ <- evalFile("casper/src/main/rholang/SystemInstancesRegistry.rho", runtime)
-      _ <- evalFile("casper/src/main/rholang/MakePoS.rho", runtime)
+      _ <- evalFile("../casper/src/main/rholang/NonNegativeNumber.rho", runtime)
+      _ <- evalFile("../casper/src/main/rholang/MakeMint.rho", runtime)
+      _ <- evalFile("../casper/src/main/rholang/BasicWallet.rho", runtime)
+      _ <- evalFile("../casper/src/main/rholang/WalletCheck.rho", runtime)
+      _ <- evalFile("../casper/src/main/rholang/SystemInstancesRegistry.rho", runtime)
+      _ <- evalFile("../casper/src/main/rholang/MakePoS.rho", runtime)
     } yield ()).unsafeRunSync
   }
 
