@@ -21,8 +21,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration.{Duration, _}
 
 abstract class WideBenchBaseState {
-  val rhoSetupScriptPath: String = "/casper/walletSeup.rho"
-  val rhoScriptSource: String    = "/casper/transfers.rho"
+  val rhoSetupScriptPath: String = "/rholang/walletSeup.rho"
+  val rhoScriptSource: String    = "/rholang/transfers.rho"
 
   implicit val scheduler: Scheduler = Scheduler.fixedPool(name = "wide-1", poolSize = 100)
   lazy val dbDir: Path              = Files.createTempDirectory(BenchStorageDirPrefix)
@@ -42,7 +42,8 @@ abstract class WideBenchBaseState {
       implicit rand: Blake2b512Random
   ): Task[Unit] =
     for {
-      term <- Interpreter.buildNormalizedTerm(resourceFileReader(path)).task
+      code <- Task.delay { scala.io.Source.fromFile(path).mkString }
+      term <- Interpreter.buildNormalizedTerm(code).task
       _    <- runtime.reducer.setAvailablePhlos(Cost(Integer.MAX_VALUE))
       _    <- runtime.replayReducer.setAvailablePhlos(Cost(Integer.MAX_VALUE))
       _    <- runtime.reducer.inj(term)
@@ -80,7 +81,6 @@ abstract class WideBenchBaseState {
       _ <- evalFile("casper/src/main/rholang/WalletCheck.rho", runtime)
       _ <- evalFile("casper/src/main/rholang/SystemInstancesRegistry.rho", runtime)
       _ <- evalFile("casper/src/main/rholang/MakePoS.rho", runtime)
-      _ <- evalFile("casper/walletSeup.rho", runtime)
     } yield ()).unsafeRunSync
   }
 

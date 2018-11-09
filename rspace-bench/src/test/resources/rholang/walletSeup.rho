@@ -1,0 +1,401 @@
+
+//requires MakeMint, BasicWallet, WalletCheck, MakePoS
+new
+  rl(`rho:registry:lookup`), MakeMintCh, WalletCheckCh, BasicWalletCh,
+  MakePoSCh, SystemInstancesCh, revMintCh, posPurseCh, rev, posCh
+in {
+  rl!(`rho:id:exunyijimapk7z43g3bbr69awqdz54kyroj9q43jgu3dh567fxsftx`, *MakeMintCh) |
+  rl!(`rho:id:oqez475nmxx9ktciscbhps18wnmnwtm6egziohc3rkdzekkmsrpuyt`, *WalletCheckCh) |
+  rl!(`rho:id:3yicxut5xtx5tnmnneta7actof4yse3xangw4awzt8c8owqmddgyms`, *BasicWalletCh) |
+  rl!(`rho:id:nqt875jea4rr83383ys6guzsbebg6k7o7uhrint6d7km67886c4y4s`, *MakePoSCh) |
+  rl!(`rho:id:wdwc36f4ixa6xacck3ddepmgueum7zueuczgthcqp6771kdu8jogm8`, *SystemInstancesCh) |
+  for(
+    @(_, MakeMint) <- MakeMintCh; @(_, WalletCheck) <- WalletCheckCh;
+    @(_, BasicWallet) <- BasicWalletCh; @(_, MakePoS) <- MakePoSCh;
+    @(_, SystemInstancesRegistry) <- SystemInstancesCh
+  ) {
+    @MakeMint!(*revMintCh) | for(@revMint <- revMintCh) {
+      //TODO: How should the revMint unforgeable name be exposed (if at all)?
+
+      //public contract for making empty rev purses
+      contract rev(@"makePurse", return) = {
+         @revMint!("makePurse", 0, *return)
+      } |
+      @SystemInstancesRegistry!("register", "rev", bundle+{*rev}) |
+
+      @SystemInstancesRegistry!("register", "faucet", Nil) |
+
+      //PoS purse and contract creation
+      @revMint!("makePurse", 0, *posPurseCh) |
+      for(@posPurse <- posPurseCh) {
+        @MakePoS!(posPurse, 1, 9223372036854775807, { "".hexToBytes() : (0, "secp256k1Verify", Nil, 1)}, *posCh) |
+        for(@pos <- posCh) {
+          @SystemInstancesRegistry!("register", "pos", bundle+{pos})
+        }
+      } |
+
+      //basic wallets which exist from genesis
+      
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "124b4b81ad8f1e9de9c7aa023c35857e750dfd80019365309698d7e261921263", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("124b4b81ad8f1e9de9c7aa023c35857e750dfd80019365309698d7e261921263".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("124b4b81ad8f1e9de9c7aa023c35857e750dfd80019365309698d7e261921263".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "b1cc41eff12ef20018880a3823c86dfdee0d062e0071e21f8c6786d0a08a1c72", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("b1cc41eff12ef20018880a3823c86dfdee0d062e0071e21f8c6786d0a08a1c72".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("b1cc41eff12ef20018880a3823c86dfdee0d062e0071e21f8c6786d0a08a1c72".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "d9db7581e908ebd5508b66fd9fdc9c77139c070718e7dbcafb0291445a73bfcd", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("d9db7581e908ebd5508b66fd9fdc9c77139c070718e7dbcafb0291445a73bfcd".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("d9db7581e908ebd5508b66fd9fdc9c77139c070718e7dbcafb0291445a73bfcd".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "cfd84cc3347c0c1d409ba535a25cae61e4db05dfbac2c592d70008423ad2e60b", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("cfd84cc3347c0c1d409ba535a25cae61e4db05dfbac2c592d70008423ad2e60b".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("cfd84cc3347c0c1d409ba535a25cae61e4db05dfbac2c592d70008423ad2e60b".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "a5780c75c4d417af37a73e1401d9b0e8f6cc305daabc33d79bcdaa975d7c9bb2", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("a5780c75c4d417af37a73e1401d9b0e8f6cc305daabc33d79bcdaa975d7c9bb2".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("a5780c75c4d417af37a73e1401d9b0e8f6cc305daabc33d79bcdaa975d7c9bb2".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "b5d5a57cf8d7c26996583db62d2bf5c6d1f9c68543b8f0bd9453ebbb1dc8ab63", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("b5d5a57cf8d7c26996583db62d2bf5c6d1f9c68543b8f0bd9453ebbb1dc8ab63".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("b5d5a57cf8d7c26996583db62d2bf5c6d1f9c68543b8f0bd9453ebbb1dc8ab63".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "996d87ff3bfe850ad8313537ed9c18a8c0b3466f35dadef589a38ea26fa935d7", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("996d87ff3bfe850ad8313537ed9c18a8c0b3466f35dadef589a38ea26fa935d7".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("996d87ff3bfe850ad8313537ed9c18a8c0b3466f35dadef589a38ea26fa935d7".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "8a3e071d2f1117f97f645e53d71b8daadd065e25b3b24addc7e57042139568df", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("8a3e071d2f1117f97f645e53d71b8daadd065e25b3b24addc7e57042139568df".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("8a3e071d2f1117f97f645e53d71b8daadd065e25b3b24addc7e57042139568df".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "f22e025792453bdcd13b74320102ea011099b28c76e788f628df836b2a6275c2", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("f22e025792453bdcd13b74320102ea011099b28c76e788f628df836b2a6275c2".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("f22e025792453bdcd13b74320102ea011099b28c76e788f628df836b2a6275c2".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "1290c826f5ad8c3663ed46253c41062301ff3601ae711c8a132829e1137d6980", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("1290c826f5ad8c3663ed46253c41062301ff3601ae711c8a132829e1137d6980".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("1290c826f5ad8c3663ed46253c41062301ff3601ae711c8a132829e1137d6980".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "fa7e444cbbcfc7b370a5889978399e5d01113e822de968a16b859f93188e1bd9", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("fa7e444cbbcfc7b370a5889978399e5d01113e822de968a16b859f93188e1bd9".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("fa7e444cbbcfc7b370a5889978399e5d01113e822de968a16b859f93188e1bd9".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "73fa058b84be934d7f46f8c5a7200eab16e83430ba882a95554b290b8829f66d", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("73fa058b84be934d7f46f8c5a7200eab16e83430ba882a95554b290b8829f66d".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("73fa058b84be934d7f46f8c5a7200eab16e83430ba882a95554b290b8829f66d".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "ddb1c2b40b8ba61332a3d79ffe1e05b949aaa7b9813f0077ba378365781f6f71", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("ddb1c2b40b8ba61332a3d79ffe1e05b949aaa7b9813f0077ba378365781f6f71".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("ddb1c2b40b8ba61332a3d79ffe1e05b949aaa7b9813f0077ba378365781f6f71".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "26a3ffb68f6b655b871202f2feaabd2ef0dc4b6556e83c20ced9d57509781d34", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("26a3ffb68f6b655b871202f2feaabd2ef0dc4b6556e83c20ced9d57509781d34".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("26a3ffb68f6b655b871202f2feaabd2ef0dc4b6556e83c20ced9d57509781d34".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+} |
+
+new purseCh, walletCh, rs(`rho:registry:insertSigned:ed25519`) in {
+  @revMint!("makePurse", 100, *purseCh) |
+  for(@purse <- purseCh) {
+    @BasicWallet!(purse, "ed25519", "cb0b6c7ab336e3a4b9a72c611e064e5687b29e32ba5fd0cb580c27c4f6063e43", *walletCh) |
+    for(@maybeWallet <- walletCh) {
+      match maybeWallet {
+        [wallet] => { rs!("cb0b6c7ab336e3a4b9a72c611e064e5687b29e32ba5fd0cb580c27c4f6063e43".hexToBytes(), (9223372036854775807, wallet), "abc".hexToBytes(), Nil) }
+        _        => { rs!("cb0b6c7ab336e3a4b9a72c611e064e5687b29e32ba5fd0cb580c27c4f6063e43".hexToBytes(), (0, "Error during wallet creation!"), "abc".hexToBytes(), Nil) }
+      }
+    }
+  }
+}
+    }
+  }
+}
+   |
+
+    contract @"0x124b4b81ad8f1e9de9c7aa023c35857e750dfd80019365309698d7e261921263"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:qqg6g5myt1nxmnwcug1yjia558mrzcjg9iqwapu1by9fj1jm9wz8t4`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0xb1cc41eff12ef20018880a3823c86dfdee0d062e0071e21f8c6786d0a08a1c72"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:py68nr8ug88uq8jg9gpjxswphh4i4rk8git9nbhqfidgsc3nd6g93k`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0xd9db7581e908ebd5508b66fd9fdc9c77139c070718e7dbcafb0291445a73bfcd"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:138zy9a4pz98rkqaiazomgp44hsimwhfxxkcmi4q9jz974kz9pixbu`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0xcfd84cc3347c0c1d409ba535a25cae61e4db05dfbac2c592d70008423ad2e60b"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:wfoapirnr1x7keaqqzi5sghzs65ww49oy7f81r3nf31cac6mteq86s`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0xa5780c75c4d417af37a73e1401d9b0e8f6cc305daabc33d79bcdaa975d7c9bb2"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:xa5gr6ry3q5qawojyfqcgtkcsssh87twefe8ti7gsry5ocqbibm5xg`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0xb5d5a57cf8d7c26996583db62d2bf5c6d1f9c68543b8f0bd9453ebbb1dc8ab63"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:if31d931gqns5jac6yt5zi7yiag1fujborgitqra3mmgknf7of99ew`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0x996d87ff3bfe850ad8313537ed9c18a8c0b3466f35dadef589a38ea26fa935d7"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:mpn1w6th1jxk3rfzmhgf76cb9ozgxh55n15skdqi1tzw6wx9ig14mz`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0x8a3e071d2f1117f97f645e53d71b8daadd065e25b3b24addc7e57042139568df"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:xuuurjwjoee569cof8s5bctkxt5yhnkjz6b7y6p4sarfioj95ddosk`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0xf22e025792453bdcd13b74320102ea011099b28c76e788f628df836b2a6275c2"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:raaywpmnz6nzgrpcqskrrxcppa3cec6p7tqhfyfb9arucqpqiqcjoz`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0x1290c826f5ad8c3663ed46253c41062301ff3601ae711c8a132829e1137d6980"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:6k8qmf44wd5c8j1knnzc3agmtfh4qsf3zrejuandteu31ks4epntuz`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0xfa7e444cbbcfc7b370a5889978399e5d01113e822de968a16b859f93188e1bd9"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:4yqb6zywcopfww1kxgpqf67f6pc6qcmu8xrfjtocfxat6k1cc57xpq`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0x73fa058b84be934d7f46f8c5a7200eab16e83430ba882a95554b290b8829f66d"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:gss7giekumccxzu3xomut6gx1spjjzdgr1jr64wr93ffaz14fzpc9w`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0xddb1c2b40b8ba61332a3d79ffe1e05b949aaa7b9813f0077ba378365781f6f71"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:zgpdnrzwjr8tite91gsyrjdf96behak5crfhzpgx6fhze17hpqrgti`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0x26a3ffb68f6b655b871202f2feaabd2ef0dc4b6556e83c20ced9d57509781d34"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:gwfpw8rem4ddnkcwh64977yb6d5rre4419hpm95ccwgfeckbo6n61b`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+     |
+
+    contract @"0xcb0b6c7ab336e3a4b9a72c611e064e5687b29e32ba5fd0cb580c27c4f6063e43"(@purse) = {
+      new purseAmountCh, walletCh, return(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+        @purse!("getBalance", *purseAmountCh) |
+        rl!(`rho:id:fkprozrc5zpb4iuznp6ecce66bc6ik49jx6ay9iqzcx3ssz1efue1k`, *walletCh) |
+        for(@(_, wallet) <- walletCh; @amount <- purseAmountCh) {
+          @wallet!("deposit", amount, purse, *return)
+        }
+      }
+    }
+    

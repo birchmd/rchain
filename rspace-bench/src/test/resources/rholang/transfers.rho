@@ -1,0 +1,84 @@
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:qqg6g5myt1nxmnwcug1yjia558mrzcjg9iqwapu1by9fj1jm9wz8t4`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "ba6d84bb2f7e5e4dd64eb5cf71eacaaf818b7fb22180703fe8a83b8be04c6ff55dadbfc83523cf7696c6621d9fb035d26dd96dc560d3a75d4a0be79096456b05", "0xb1cc41eff12ef20018880a3823c86dfdee0d062e0071e21f8c6786d0a08a1c72", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:py68nr8ug88uq8jg9gpjxswphh4i4rk8git9nbhqfidgsc3nd6g93k`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "69165a3d47cca5e3453e3cc8ebb3a3d57da25701461b4ce2a98c43b432cda59d000c0ede618246ef5a6ce4aa4b75a8b07da50d8fd42eb78858b64d9014dd2205", "0xd9db7581e908ebd5508b66fd9fdc9c77139c070718e7dbcafb0291445a73bfcd", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:138zy9a4pz98rkqaiazomgp44hsimwhfxxkcmi4q9jz974kz9pixbu`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "ee0490fcc75eb32ca31a80c298e37e7bf39c50759577bdbce66f0c989ca71e0b99e16418e19f93f87d5858b8bc4638b6223e80230704d517f470541579101a03", "0xcfd84cc3347c0c1d409ba535a25cae61e4db05dfbac2c592d70008423ad2e60b", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:wfoapirnr1x7keaqqzi5sghzs65ww49oy7f81r3nf31cac6mteq86s`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "d10ac3e5dae2663a252abd9de8e683e390728afb3eb7ddf836fffadad572047487ffb98427d2b0f165d0fa8a589d12ce92991c3d499ad98e5fc1d00085b53208", "0xa5780c75c4d417af37a73e1401d9b0e8f6cc305daabc33d79bcdaa975d7c9bb2", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:xa5gr6ry3q5qawojyfqcgtkcsssh87twefe8ti7gsry5ocqbibm5xg`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "d38fd4592623264f49300e60e0417efba5b5a8ff2140a59b9220277d76a5361ee5bc83cc84239054b44cdcc6c443cc0118bc78d5e5f354dbc03685016edff00f", "0xb5d5a57cf8d7c26996583db62d2bf5c6d1f9c68543b8f0bd9453ebbb1dc8ab63", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:if31d931gqns5jac6yt5zi7yiag1fujborgitqra3mmgknf7of99ew`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "7a53b5d6542f49b9a1c9ce63b60dc883f4e22d29c570a9ac537c6380a9bfc555bf9a758aea06e76bcb8d9e6dae86b687c8decb03b4a9fac34ccd8aefe8d32a0b", "0x996d87ff3bfe850ad8313537ed9c18a8c0b3466f35dadef589a38ea26fa935d7", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:mpn1w6th1jxk3rfzmhgf76cb9ozgxh55n15skdqi1tzw6wx9ig14mz`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "349f832d4512c0dc2031d5fef9906d2f248043aa280a7317c78084252b488c79eda317e6a1455b565a4043baee3415f546eb87a7e086d6d4dd8b49fea2efb20b", "0x8a3e071d2f1117f97f645e53d71b8daadd065e25b3b24addc7e57042139568df", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:xuuurjwjoee569cof8s5bctkxt5yhnkjz6b7y6p4sarfioj95ddosk`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "1298456280494d7bdadcc1a57ba83025efae668cbfba44c44ac4dc584d2eeb541cb6ac16765426b3ee7e4ea93401e3f30e107e8b86d6ab3925a969fe2ae0d208", "0xf22e025792453bdcd13b74320102ea011099b28c76e788f628df836b2a6275c2", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:raaywpmnz6nzgrpcqskrrxcppa3cec6p7tqhfyfb9arucqpqiqcjoz`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "7a039a21492c5a7b32dc8c25667f9b1c71b4b4f5a17cf1c310a1a2fda868fe6290296e2a9ced282da5247f2bab0e74d69fc8c480faabf5627cd7d89e79e36906", "0x1290c826f5ad8c3663ed46253c41062301ff3601ae711c8a132829e1137d6980", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:6k8qmf44wd5c8j1knnzc3agmtfh4qsf3zrejuandteu31ks4epntuz`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "5108bab17e7b139d21d31e1659ff4d000ca714d8fac4a637e23467b42942068a3176cee4c0bb67939504159a5c8a58e0b34dce669ef3cecbc0c7b25ea8d1a606", "0xfa7e444cbbcfc7b370a5889978399e5d01113e822de968a16b859f93188e1bd9", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:4yqb6zywcopfww1kxgpqf67f6pc6qcmu8xrfjtocfxat6k1cc57xpq`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "74440279c40d096ac4beb2ac0f17eb0a638d5b265d349ef82f27ef24fe7071adaf20e9cfb20d7e2f547ef104879e4b5317ea2aafad64665078900aee971ff90d", "0x73fa058b84be934d7f46f8c5a7200eab16e83430ba882a95554b290b8829f66d", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:gss7giekumccxzu3xomut6gx1spjjzdgr1jr64wr93ffaz14fzpc9w`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "b6509b3ddf3150e2d4a4aa3c88e29cc7b82d473499eede56b194da914c3242feff7a0d33264e769f1a3405ffa60b0770fb1aa118be7ff70697c877f32e13fc0a", "0xddb1c2b40b8ba61332a3d79ffe1e05b949aaa7b9813f0077ba378365781f6f71", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:zgpdnrzwjr8tite91gsyrjdf96behak5crfhzpgx6fhze17hpqrgti`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "2bb5396470558061b991921593db693775203e3e1e9510192ab0341c8312e55a03e41899c95994961c6686c654d365fca0174850b6c88574f8472cefe516f303", "0x26a3ffb68f6b655b871202f2feaabd2ef0dc4b6556e83c20ced9d57509781d34", *status)
+  }
+} |
+new walletCh, status(`rho:io:stdout`), rl(`rho:registry:lookup`) in {
+  rl!(`rho:id:gwfpw8rem4ddnkcwh64977yb6d5rre4419hpm95ccwgfeckbo6n61b`, *walletCh) |
+  for(@(_, wallet) <- walletCh) {
+    @wallet!("transfer", 11, 0, "ea9ac35a7b47abb4e80ba6ae274bd9e1289fabb9bb52028a6606090320b6c3f8be57c34ada0bcbdec1588eef79779d2159a76fe038b8ebdfc37c911e51b13106", "0xcb0b6c7ab336e3a4b9a72c611e064e5687b29e32ba5fd0cb580c27c4f6063e43", *status)
+  }
+}

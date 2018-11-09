@@ -58,9 +58,6 @@ abstract class WideBenchState extends WideBenchBaseState {
   @Setup(value = Level.Iteration)
   override def doSetup(): Unit = {
     super.doSetup()
-    //make sure we always start from clean rspace
-    runtime.replaySpace.clear()
-    runtime.space.clear()
     processErrors(Await.result(createTest(setupTerm, runtime.reducer).runAsync, Duration.Inf))
     runTask = createTest(term, runtime.reducer)
   }
